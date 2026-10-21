@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@layer base {
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: inherit;
+  }
+  html.dark ::selection {
+    background-color: rgba(59, 130, 246, 0.4);
+    color: #ffffff;
+  }
+
+  /* -------------------------------------------------------------
+     DARK THEME DEFINITIVE RULES (Applied whenever html has .dark)
+     ------------------------------------------------------------- */
+  html.dark,
+  html.dark body {
+    background-color: #0b0f19 !important;
+    color: #f8fafc !important;
+  }
+
+  /* Cards, panels, dropdowns, headers */
+  html.dark .bg-white {
+    background-color: #111827 !important; /* Rich Dark Slate-900 */
+    color: #f8fafc !important;
+    border-color: #1f2937 !important;
+  }
+
+  html.dark header.bg-white {
+    background-color: #0f172a !important;
+    border-color: #1e293b !important;
+  }
+
+  /* Inputs, selects, and textareas - CRISP VISIBILITY */
+  input,
+  textarea,
+  select {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+
+  html.dark input,
+  html.dark textarea,
+  html.dark select {
+    background-color: #1f2937 !important;
+    color: #ffffff !important;
+    border: 1px solid #374151 !important;
+  }
+
+  html.dark input::placeholder,
+  html.dark textarea::placeholder {
+    color: #9ca3af !important;
+  }
+
+  /* Modals in dark theme */
+  html.dark .bg-white.rounded-xl,
+  html.dark .bg-white.rounded-2xl {
+    background-color: #111827 !important;
+    border-color: #1f2937 !important;
+    color: #ffffff !important;
+  }
+
+  /* Fix grey hover and replace with clean dark subtle hover */
+  html.dark .hover\:bg-slate-50\/70:hover,
+  html.dark .hover\:bg-slate-50\/80:hover,
+  html.dark .hover\:bg-slate-50:hover,
+  html.dark .hover\:bg-slate-100:hover {
+    background-color: #1f2937 !important; /* Gentle dark highlight, NOT washed grey */
+  }
+
+  /* Light theme hover fix */
+  .hover\:bg-slate-50\/70:hover {
+    background-color: #f8fafc;
+  }
+
+  /* Status pills and text readability */
+  html.dark .text-slate-900,
+  html.dark .text-slate-800,
+  html.dark .text-slate-700 {
+    color: #f3f4f6 !important;
+  }
+
+  html.dark .text-slate-600,
+  html.dark .text-slate-500 {
+    color: #9ca3af !important;
+  }
+
+  html.dark .text-slate-400 {
+    color: #6b7280 !important;
+  }
+
+  /* Secondary cards & sections */
+  html.dark .bg-slate-50 {
+    background-color: #111827 !important;
+    border-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+  }
+
+  html.dark .bg-slate-100 {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #f3f4f6 !important;
+  }
+
+  html.dark .border-slate-100,
+  html.dark .border-slate-200 {
+    border-color: #1f2937 !important;
+  }
+}
+
+/* Micro-interaction lift */
+.card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.1);
+}
+html.dark .card-hover:hover {
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
