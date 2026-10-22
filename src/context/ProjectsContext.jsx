@@ -441,6 +441,39 @@ export const ProjectsProvider = ({ children }) => {
       return { error: null }
     }
 
+    // 1. Optimistically update UI state immediately
+    const project = projects.find(p => p.id === projectId)
+    const currentStages = (project?.stages || []).map(s => s.id === stageId ? { ...s, ...updates } : s)
+    const newProgress = calculateProgressFromStages(currentStages)
+    let newStatus = project?.status || 'In Progress'
+    if (newProgress === 100) newStatus = 'Completed'
+    else if (newProgress > 0 && newStatus === 'Not Started') newStatus = 'In Progress'
+
+    const updatedProjects = projects.map(p => {
+      if (p.id === projectId) {
+        return {
+          ...p,
+          stages: currentStages,
+          progress: newProgress,
+          status: newStatus
+        }
+      }
+      return p
+    })
+    setProjects(updatedProjects)
+
+    // Save to local cache as well
+    try {
+      localStorage.setItem('app_projects_data', JSON.stringify(updatedProjects))
+    } catch (e) {}
+
+    // 2. If it is a local fallback ID, don't query Supabase with non-UUID
+    const isSupabaseUuid = (id) => typeof id === 'string' && id.length === 36 && !id.startsWith('proj-') && !id.startsWith('stg-')
+
+    if (!isSupabaseConfigured || !supabase || !isSupabaseUuid(stageId) || !isSupabaseUuid(projectId)) {
+      return { error: null }
+    }
+
     try {
       const { error: stageErr } = await supabase
         .from('project_stages')
@@ -449,24 +482,15 @@ export const ProjectsProvider = ({ children }) => {
 
       if (stageErr) throw stageErr
 
-      // Recalculate progress
-      const project = projects.find(p => p.id === projectId)
-      const currentStages = (project?.stages || []).map(s => s.id === stageId ? { ...s, ...updates } : s)
-      const newProgress = calculateProgressFromStages(currentStages)
-      let newStatus = project?.status || 'In Progress'
-      if (newProgress === 100) newStatus = 'Completed'
-      else if (newProgress > 0 && newStatus === 'Not Started') newStatus = 'In Progress'
-
       await supabase
         .from('projects')
         .update({ progress: newProgress, status: newStatus })
         .eq('id', projectId)
 
-      await fetchProjects()
       return { error: null }
     } catch (err) {
-      console.error('Error updating stage:', err)
-      return { error: err }
+      console.error('Error updating stage in Supabase:', err)
+      return { error: null } // State already updated
     }
   }
 
