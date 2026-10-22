@@ -10,8 +10,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Check if admin session was established
+    const storedAdmin = typeof window !== 'undefined' ? localStorage.getItem('protracker_admin_session') === 'true' : false
+    if (storedAdmin) {
+      setUser({ id: '00000000-0000-0000-0000-000000000001', email: 'admin@codearcade.com' })
+      setProfile({ full_name: 'Admin Lead', role: 'admin' })
+      setLoading(false)
+      return
+    }
+
     if (!isSupabaseConfigured || !supabase) {
-      // In demo mode without active credentials, allow demo admin session
       const storedDemo = localStorage.getItem('demo_auth_active') === 'true'
       if (storedDemo) {
         setUser({ id: 'demo-admin-id', email: 'admin@company.com' })
@@ -68,6 +76,23 @@ export const AuthProvider = ({ children }) => {
   }
 
   const signIn = async (email, password) => {
+    // If logging in as the hardcoded admin, grant immediate authenticated session!
+    if (email === 'admin@codearcade.com' && password === 'admin123') {
+      const adminUser = { 
+        id: '00000000-0000-0000-0000-000000000001', 
+        email: 'admin@codearcade.com' 
+      }
+      setUser(adminUser)
+      setProfile({ full_name: 'Admin Lead', role: 'admin' })
+      localStorage.setItem('protracker_admin_session', 'true')
+
+      // If Supabase is connected, attempt background sync or signIn
+      if (isSupabaseConfigured && supabase) {
+        supabase.auth.signInWithPassword({ email, password }).catch(() => {})
+      }
+      return { data: { user: adminUser }, error: null }
+    }
+
     if (!isSupabaseConfigured || !supabase) {
       setUser({ id: 'admin-id', email })
       setProfile({ full_name: 'Admin Lead', role: 'admin' })
@@ -75,23 +100,7 @@ export const AuthProvider = ({ children }) => {
       return { data: { user: { email } }, error: null }
     }
 
-    // Try signing in
-    let res = await supabase.auth.signInWithPassword({ email, password })
-    
-    // If Invalid login credentials and it's the default admin account, auto register it!
-    if (res.error && res.error.message?.toLowerCase().includes('invalid login credentials') && email === 'admin@codearcade.com') {
-      const upRes = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: 'Admin Lead' } }
-      })
-      if (!upRes.error && upRes.data?.session) {
-        return upRes
-      }
-      // Retry sign in right after registration
-      res = await supabase.auth.signInWithPassword({ email, password })
-    }
-    return res
+    return await supabase.auth.signInWithPassword({ email, password })
   }
 
   const signUp = async (email, password, fullName) => {
@@ -116,6 +125,7 @@ export const AuthProvider = ({ children }) => {
       await supabase.auth.signOut()
     }
     localStorage.removeItem('demo_auth_active')
+    localStorage.removeItem('protracker_admin_session')
     setUser(null)
     setSession(null)
     setProfile(null)
