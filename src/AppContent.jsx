@@ -147,6 +147,22 @@ export function AppContent() {
             <SettingsView />
           )}
         </main>
+
+        {/* Footer */}
+        <footer className="py-4 px-6 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xs text-center text-xs text-slate-500 dark:text-slate-400">
+          <p className="flex items-center justify-center gap-1.5 flex-wrap">
+            <span>Developed with ❤️ by</span>
+            <a 
+              href="https://codearcade20.vercel.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors inline-flex items-center gap-1"
+            >
+              <span>CodeArcade</span>
+              <span className="text-[10px]">↗</span>
+            </a>
+          </p>
+        </footer>
       </div>
 
       {/* Project Create / Edit Dialog */}
