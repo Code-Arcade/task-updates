@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { Navbar } from './components/Navbar'
+import { MatrixGridView } from './components/MatrixGridView'
 import { DashboardView } from './components/DashboardView'
 import { ProjectsList } from './components/ProjectsList'
 import { ProjectDetail } from './components/ProjectDetail'
@@ -15,8 +16,8 @@ export function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { createProject, updateProject, deleteProject } = useProjects()
 
-  // Navigation state
-  const [activeTab, setActiveTab] = useState('dashboard')
+  // Navigation state - MatrixGridView is the Project Master view matching user request
+  const [activeTab, setActiveTab] = useState('matrix')
   const [selectedProjectId, setSelectedProjectId] = useState(null)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
@@ -76,6 +77,8 @@ export function AppContent() {
 
   const getPageTitle = () => {
     switch (activeTab) {
+      case 'matrix':
+        return 'Project Master'
       case 'dashboard':
         return 'Executive Overview'
       case 'projects':
@@ -119,6 +122,13 @@ export function AppContent() {
 
         {/* Dynamic View Body */}
         <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">
+          {activeTab === 'matrix' && (
+            <MatrixGridView
+              onOpenNewProject={handleOpenNewProject}
+              onSelectProject={handleSelectProject}
+            />
+          )}
+
           {activeTab === 'dashboard' && (
             <DashboardView
               onSelectProject={handleSelectProject}

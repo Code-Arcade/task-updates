@@ -467,6 +467,48 @@ export const ProjectsProvider = ({ children }) => {
     }
   }
 
+  // 8. Toggle Task Checkmark (Matrix Grid)
+  const toggleTaskCheck = async (projectId, stageName, currentCompleted) => {
+    const project = projects.find(p => p.id === projectId)
+    if (!project) return
+
+    const newStatus = currentCompleted ? 'Not Started' : 'Completed'
+    const existingStage = (project.stages || []).find(s => s.name.trim().toLowerCase() === stageName.trim().toLowerCase())
+
+    if (existingStage) {
+      await updateStage(existingStage.id, projectId, { status: newStatus })
+    } else {
+      // Create the stage as Completed
+      await addStage(projectId, {
+        name: stageName,
+        status: newStatus,
+        description: `Tracked in Project Master`
+      })
+    }
+  }
+
+  // 9. Insert Global Task Column across all projects or as a template
+  const insertGlobalTask = async (taskName, afterTaskName) => {
+    if (!taskName || !taskName.trim()) return
+    const cleanName = taskName.trim()
+
+    // Add this task to every existing project that doesn't have it yet
+    const promises = projects.map(project => {
+      const exists = (project.stages || []).some(s => s.name.trim().toLowerCase() === cleanName.toLowerCase())
+      if (!exists) {
+        return addStage(project.id, {
+          name: cleanName,
+          status: 'Not Started',
+          description: `Task in Project Master`
+        })
+      }
+      return Promise.resolve()
+    })
+
+    await Promise.all(promises)
+    await fetchProjects()
+  }
+
   return (
     <ProjectsContext.Provider
       value={{
@@ -481,7 +523,9 @@ export const ProjectsProvider = ({ children }) => {
         updateStage,
         deleteStage,
         reorderStages,
-        calculateProgressFromStages
+        calculateProgressFromStages,
+        toggleTaskCheck,
+        insertGlobalTask
       }}
     >
       {children}

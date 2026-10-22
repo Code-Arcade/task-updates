@@ -1,5 +1,5 @@
-import React from 'react'
 import { 
+  TableProperties,
   LayoutDashboard, 
   FolderKanban, 
   Settings, 
@@ -15,6 +15,7 @@ export const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen
   const { user, profile, signOut, isSupabaseConfigured } = useAuth()
 
   const navItems = [
+    { id: 'matrix', label: 'Project Master', icon: TableProperties },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'All Projects', icon: FolderKanban },
     { id: 'settings', label: 'Settings & Supabase', icon: Settings },
