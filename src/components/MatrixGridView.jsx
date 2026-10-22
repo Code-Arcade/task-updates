@@ -33,22 +33,36 @@ export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
   const [isInserting, setIsInserting] = useState(false)
   const [activeCellUpdating, setActiveCellUpdating] = useState(null)
 
-  // Derive unique task columns across all projects
+  // Custom task columns that persist even when no project exists yet
+  const [customColumns, setCustomColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('protracker_custom_columns')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Derive unique task columns across all projects + user inserted columns
   const taskColumns = useMemo(() => {
     const namesSet = new Set()
+    
+    // Add existing project stages
     projects.forEach(p => {
       (p.stages || []).forEach(s => {
         if (s.name) namesSet.add(s.name.trim())
       })
     })
 
+    // Add user-added custom columns
+    customColumns.forEach(c => namesSet.add(c.trim()))
+
     const names = Array.from(namesSet)
-    // If fewer than 10 or 12 default tasks, supply canonical Task 1..Task 12
     if (names.length === 0) {
       return Array.from({ length: 12 }, (_, i) => `Task ${i + 1}`)
     }
     return names
-  }, [projects])
+  }, [projects, customColumns])
 
   // Get remark based on progress
   const getProgressRemark = (progress) => {
@@ -74,9 +88,26 @@ export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
   const handleInsertTask = async (e) => {
     e.preventDefault()
     if (!newTaskName.trim()) return
+    const name = newTaskName.trim()
     setIsInserting(true)
     try {
-      await insertGlobalTask(newTaskName.trim(), afterTask)
+      // 1. Insert into persistent column state
+      setCustomColumns(prev => {
+        let updated = [...prev]
+        if (!updated.includes(name)) {
+          if (afterTask && updated.includes(afterTask)) {
+            const idx = updated.indexOf(afterTask)
+            updated.splice(idx + 1, 0, name)
+          } else {
+            updated.push(name)
+          }
+        }
+        localStorage.setItem('protracker_custom_columns', JSON.stringify(updated))
+        return updated
+      })
+
+      // 2. Also attach to any existing projects
+      await insertGlobalTask(name, afterTask)
       setNewTaskName('')
     } finally {
       setIsInserting(false)
