@@ -596,25 +596,68 @@ export const ProjectsProvider = ({ children }) => {
     }
   }
 
-  // 9. Insert Global Task Column across all projects or as a template
-  const insertGlobalTask = async (taskName, afterTaskName) => {
-    if (!taskName || !taskName.trim()) return
+  // 10. Rename Global Task Column across projects and cloud database
+  const renameGlobalTask = async (oldName, newName) => {
+    if (!oldName || !newName || !newName.trim()) return
+    const cleanOld = oldName.trim()
+    const cleanNew = newName.trim()
+
+    // Update in-memory state for all projects immediately
+    setProjects(prev => prev.map(p => {
+      const updatedStages = (p.stages || []).map(s => {
+        if (s.name.trim().toLowerCase() === cleanOld.toLowerCase()) {
+          return { ...s, name: cleanNew }
+        }
+        return s
+      })
+      return { ...p, stages: updatedStages }
+    }))
+
+    // Update in Supabase
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('project_stages')
+          .update({ name: cleanNew })
+          .ilike('name', cleanOld)
+      } catch (err) {
+        console.error('Error renaming stage in Supabase:', err)
+      }
+    }
+  }
+
+  // 11. Delete Global Task Column across projects and cloud database
+  const deleteGlobalTask = async (taskName) => {
+    if (!taskName) return
     const cleanName = taskName.trim()
 
-    // Add this task to every existing project that doesn't have it yet
-    const promises = projects.map(project => {
-      const exists = (project.stages || []).some(s => s.name.trim().toLowerCase() === cleanName.toLowerCase())
-      if (!exists) {
-        return addStage(project.id, {
-          name: cleanName,
-          status: 'Not Started',
-          description: `Task in Project Master`
-        })
-      }
-      return Promise.resolve()
-    })
+    // Update in-memory state for all projects immediately
+    setProjects(prev => prev.map(p => {
+      const updatedStages = (p.stages || []).filter(s => s.name.trim().toLowerCase() !== cleanName.toLowerCase())
+      const newProgress = calculateProgressFromStages(updatedStages)
+      let newStatus = p.status
+      if (newProgress === 100) newStatus = 'Completed'
+      else if (newProgress > 0 && newStatus === 'Not Started') newStatus = 'In Progress'
 
-    await Promise.all(promises)
+      return {
+        ...p,
+        stages: updatedStages,
+        progress: newProgress,
+        status: newStatus
+      }
+    }))
+
+    // Delete in Supabase
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('project_stages')
+          .delete()
+          .ilike('name', cleanName)
+      } catch (err) {
+        console.error('Error deleting stages from Supabase:', err)
+      }
+    }
   }
 
   return (
@@ -633,7 +676,9 @@ export const ProjectsProvider = ({ children }) => {
         reorderStages,
         calculateProgressFromStages,
         toggleTaskCheck,
-        insertGlobalTask
+        insertGlobalTask,
+        renameGlobalTask,
+        deleteGlobalTask
       }}
     >
       {children}

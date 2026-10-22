@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { 
   Plus, 
   CheckSquare, 
@@ -8,7 +8,12 @@ import {
   Layers,
   ChevronRight,
   TrendingUp,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Edit2,
+  Trash2,
+  ArrowLeft,
+  ArrowRight,
+  MoreVertical
 } from 'lucide-react'
 import { 
   PieChart, 
@@ -25,13 +30,29 @@ import {
 import { useProjects } from '../context/ProjectsContext'
 
 export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
-  const { projects, toggleTaskCheck, insertGlobalTask } = useProjects()
+  const { projects, toggleTaskCheck, insertGlobalTask, renameGlobalTask, deleteGlobalTask } = useProjects()
 
   // New task form state
   const [newTaskName, setNewTaskName] = useState('')
   const [afterTask, setAfterTask] = useState('')
   const [isInserting, setIsInserting] = useState(false)
   const [activeCellUpdating, setActiveCellUpdating] = useState(null)
+
+  // Context Menu State for Column Headers
+  const [contextMenu, setContextMenu] = useState(null) // { x, y, colName, colIndex }
+  const [renameModal, setRenameModal] = useState(null) // { colName, newName }
+  const contextMenuRef = useRef(null)
+
+  // Close context menu on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+        setContextMenu(null)
+      }
+    }
+    window.addEventListener('click', handleOutsideClick)
+    return () => window.removeEventListener('click', handleOutsideClick)
+  }, [])
 
   // Custom task columns that persist even when no project exists yet
   const [customColumns, setCustomColumns] = useState(() => {
@@ -45,24 +66,123 @@ export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
 
   // Derive unique task columns across all projects + user inserted columns
   const taskColumns = useMemo(() => {
-    const namesSet = new Set()
-    
-    // Add existing project stages
+    // 1. Gather all unique columns
+    const allKnown = new Set()
     projects.forEach(p => {
       (p.stages || []).forEach(s => {
-        if (s.name) namesSet.add(s.name.trim())
+        if (s.name) allKnown.add(s.name.trim())
       })
     })
+    customColumns.forEach(c => allKnown.add(c.trim()))
 
-    // Add user-added custom columns
-    customColumns.forEach(c => namesSet.add(c.trim()))
+    // 2. Preserve order specified by customColumns first, then any extra discovered
+    const ordered = []
+    customColumns.forEach(c => {
+      const trimmed = c.trim()
+      if (allKnown.has(trimmed) && !ordered.includes(trimmed)) {
+        ordered.push(trimmed)
+      }
+    })
+    allKnown.forEach(name => {
+      if (!ordered.includes(name)) {
+        ordered.push(name)
+      }
+    })
 
-    const names = Array.from(namesSet)
-    if (names.length === 0) {
+    if (ordered.length === 0) {
       return Array.from({ length: 12 }, (_, i) => `Task ${i + 1}`)
     }
-    return names
+    return ordered
   }, [projects, customColumns])
+
+  // Save updated ordered columns
+  const persistColumns = (newCols) => {
+    setCustomColumns(newCols)
+    try {
+      localStorage.setItem('protracker_custom_columns', JSON.stringify(newCols))
+    } catch (err) {
+      console.error('Error saving columns to localStorage:', err)
+    }
+  }
+
+  // Handle right-click on column header
+  const handleColumnContextMenu = (e, colName, colIndex) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Position menu within viewport
+    const clickX = e.clientX
+    const clickY = e.clientY
+    const menuWidth = 190
+    const menuHeight = 180
+    const x = clickX + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : clickX
+    const y = clickY + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : clickY
+
+    setContextMenu({
+      x,
+      y,
+      colName,
+      colIndex
+    })
+  }
+
+  // Move column left or right
+  const handleMoveColumn = (direction) => {
+    if (!contextMenu) return
+    const { colIndex } = contextMenu
+    const targetIndex = direction === 'left' ? colIndex - 1 : colIndex + 1
+    if (targetIndex < 0 || targetIndex >= taskColumns.length) return
+
+    const newCols = [...taskColumns]
+    const temp = newCols[colIndex]
+    newCols[colIndex] = newCols[targetIndex]
+    newCols[targetIndex] = temp
+
+    persistColumns(newCols)
+    setContextMenu(null)
+  }
+
+  // Delete column
+  const handleDeleteColumn = async () => {
+    if (!contextMenu) return
+    const { colName } = contextMenu
+    if (!window.confirm(`Are you sure you want to delete column "${colName}" across all projects?`)) {
+      setContextMenu(null)
+      return
+    }
+
+    const newCols = taskColumns.filter(c => c.toLowerCase() !== colName.toLowerCase())
+    persistColumns(newCols)
+    await deleteGlobalTask(colName)
+    setContextMenu(null)
+  }
+
+  // Open rename modal
+  const handleOpenRename = () => {
+    if (!contextMenu) return
+    setRenameModal({
+      colName: contextMenu.colName,
+      newName: contextMenu.colName
+    })
+    setContextMenu(null)
+  }
+
+  // Submit rename
+  const handleSubmitRename = async (e) => {
+    e.preventDefault()
+    if (!renameModal || !renameModal.newName.trim()) return
+    const oldName = renameModal.colName.trim()
+    const newName = renameModal.newName.trim()
+
+    if (oldName === newName) {
+      setRenameModal(null)
+      return
+    }
+
+    const newCols = taskColumns.map(c => c.toLowerCase() === oldName.toLowerCase() ? newName : c)
+    persistColumns(newCols)
+    await renameGlobalTask(oldName, newName)
+    setRenameModal(null)
+  }
 
   // Get remark based on progress
   const getProgressRemark = (progress) => {
@@ -92,19 +212,16 @@ export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
     setIsInserting(true)
     try {
       // 1. Insert into persistent column state
-      setCustomColumns(prev => {
-        let updated = [...prev]
-        if (!updated.includes(name)) {
-          if (afterTask && updated.includes(afterTask)) {
-            const idx = updated.indexOf(afterTask)
-            updated.splice(idx + 1, 0, name)
-          } else {
-            updated.push(name)
-          }
+      const updated = [...taskColumns]
+      if (!updated.includes(name)) {
+        if (afterTask && updated.includes(afterTask)) {
+          const idx = updated.indexOf(afterTask)
+          updated.splice(idx + 1, 0, name)
+        } else {
+          updated.push(name)
         }
-        localStorage.setItem('protracker_custom_columns', JSON.stringify(updated))
-        return updated
-      })
+      }
+      persistColumns(updated)
 
       // 2. Also attach to any existing projects
       await insertGlobalTask(name, afterTask)
@@ -217,8 +334,23 @@ export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
                     Items
                   </th>
                   {taskColumns.map((colName, idx) => (
-                    <th key={idx} className="py-2.5 px-2 font-bold min-w-[70px] whitespace-nowrap">
-                      {colName}
+                    <th 
+                      key={idx} 
+                      onContextMenu={(e) => handleColumnContextMenu(e, colName, idx)}
+                      className="py-2.5 px-2 font-bold min-w-[75px] whitespace-nowrap cursor-context-menu select-none relative group hover:bg-[#1a386b] transition-colors"
+                      title="Right-click for Rename, Delete, Move options"
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>{colName}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleColumnContextMenu(e, colName, idx)}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded-sm hover:bg-white/20 text-white/80 transition-opacity cursor-pointer"
+                          title="Column options"
+                        >
+                          <MoreVertical className="w-3 h-3" />
+                        </button>
+                      </div>
                     </th>
                   ))}
                   <th className="py-2.5 px-3 font-bold min-w-[100px] whitespace-nowrap">
@@ -644,9 +776,113 @@ export const MatrixGridView = ({ onOpenNewProject, onSelectProject }) => {
       <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 p-3 rounded-lg flex items-center gap-2.5 text-xs text-blue-900 dark:text-blue-300">
         <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
         <p>
-          <strong>Tip:</strong> Add / Insert new tasks anytime. Progress (%) is auto calculated based on completed tasks.
+          <strong>Tip:</strong> Right-click on any task column header to <strong>Rename</strong>, <strong>Delete</strong>, or <strong>Move</strong> it. Progress (%) is auto calculated based on completed tasks.
         </p>
       </div>
+
+      {/* ============================================================== */}
+      {/* 6. RIGHT-CLICK CONTEXT MENU                                    */}
+      {/* ============================================================== */}
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+          className="fixed z-50 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1.5 text-xs text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+            {contextMenu.colName}
+          </div>
+
+          {/* Rename */}
+          <button
+            type="button"
+            onClick={handleOpenRename}
+            className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <Edit2 className="w-3.5 h-3.5 text-blue-500" />
+            <span>Rename Column</span>
+          </button>
+
+          {/* Move Left */}
+          <button
+            type="button"
+            disabled={contextMenu.colIndex === 0}
+            onClick={() => handleMoveColumn('left')}
+            className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+            <span>Move Left</span>
+          </button>
+
+          {/* Move Right */}
+          <button
+            type="button"
+            disabled={contextMenu.colIndex === taskColumns.length - 1}
+            onClick={() => handleMoveColumn('right')}
+            className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+            <span>Move Right</span>
+          </button>
+
+          <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+          {/* Delete */}
+          <button
+            type="button"
+            onClick={handleDeleteColumn}
+            className="w-full text-left px-3 py-2 flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+            <span>Delete Column</span>
+          </button>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 7. RENAME MODAL DIALOG                                         */}
+      {/* ============================================================== */}
+      {renameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-5">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+              Rename Column
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Enter a new name for <strong>{renameModal.colName}</strong> across all projects:
+            </p>
+
+            <form onSubmit={handleSubmitRename} className="space-y-4">
+              <input
+                type="text"
+                autoFocus
+                required
+                value={renameModal.newName}
+                onChange={(e) => setRenameModal(prev => ({ ...prev, newName: e.target.value }))}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRenameModal(null)}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!renameModal.newName.trim()}
+                  className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Save Rename
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
