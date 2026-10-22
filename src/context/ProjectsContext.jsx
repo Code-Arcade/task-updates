@@ -81,7 +81,6 @@ export const ProjectsProvider = ({ children }) => {
         
         const computedProgress = pStages.length > 0 ? calculateProgressFromStages(pStages) : (p.progress || 0)
         
-        // Auto derive status if 100% completed or stages determine it
         let computedStatus = p.status
         if (pStages.length > 0) {
           if (computedProgress === 100) {
@@ -99,7 +98,25 @@ export const ProjectsProvider = ({ children }) => {
         }
       })
 
-      setProjects(projectsWithStages)
+      // Also merge any offline/fallback projects saved in localStorage so nothing is lost
+      let mergedProjects = [...projectsWithStages]
+      try {
+        const local = localStorage.getItem('app_projects_data')
+        if (local) {
+          const localList = JSON.parse(local)
+          if (Array.isArray(localList)) {
+            localList.forEach(lp => {
+              if (lp?.id && !mergedProjects.some(mp => mp.id === lp.id)) {
+                mergedProjects.unshift(lp)
+              }
+            })
+          }
+        }
+      } catch (e) {
+        // ignore parse error
+      }
+
+      setProjects(mergedProjects)
     } catch (err) {
       console.error('Error fetching projects:', err)
       setError(err.message || 'Failed to fetch projects')
@@ -574,7 +591,6 @@ export const ProjectsProvider = ({ children }) => {
     })
 
     await Promise.all(promises)
-    await fetchProjects()
   }
 
   return (
