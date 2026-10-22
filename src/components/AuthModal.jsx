@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext'
 export const AuthModal = ({ isOpen, onClose }) => {
   const { signIn, signUp, isSupabaseConfigured } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('admin@company.com')
-  const [password, setPassword] = useState('password123')
-  const [fullName, setFullName] = useState('Admin Lead')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -50,11 +50,6 @@ export const AuthModal = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-6">
-          {!isSupabaseConfigured && (
-            <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800">
-              <span className="font-semibold">Local Demo Session:</span> Supabase is in local demo mode. You can test sign-in with default mock credentials immediately!
-            </div>
-          )}
 
           {errorMsg && (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">

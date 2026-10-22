@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html,
   body {
@@ -126,16 +128,21 @@
   }
 }
 
-/* Micro-interaction lift */
+/* Micro-interaction lift & modern floating cards */
 .card-hover {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px -8px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
 }
 html.dark .card-hover:hover {
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 14px 28px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* Reference-inspired soft elevated containers */
+.soft-card {
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
 }
 
 /* Custom scrollbars */
@@ -153,3 +160,4 @@ html.dark .card-hover:hover {
 html.dark ::-webkit-scrollbar-thumb {
   background: #374151;
 }
+

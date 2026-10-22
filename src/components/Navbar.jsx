@@ -50,7 +50,7 @@ export const Navbar = ({ title, setIsMobileOpen, onOpenNewProject }) => {
         {onOpenNewProject && (
           <button
             onClick={onOpenNewProject}
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-md shadow-blue-500/20 hover:shadow-lg transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Project</span>

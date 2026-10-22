@@ -64,79 +64,83 @@ export const DashboardView = ({ onSelectProject, onOpenNewProject }) => {
 
   return (
     <div className="space-y-6">
-      {/* 4 Key Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 4 Key Stat Cards - Clean elevated card style inspired by reference */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Total Projects */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-5 rounded-xl shadow-xs card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl soft-card card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Projects</p>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{totalProjects}</h3>
-            <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 hidden xs:block">Across all teams</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Projects</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">{totalProjects}</h3>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 hidden xs:block">Across all workspaces</p>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 self-end sm:self-auto">
-            <FolderKanban className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 self-end sm:self-auto border border-blue-100 dark:border-blue-900/40">
+            <FolderKanban className="w-5 h-5" />
           </div>
         </div>
 
         {/* Completed Projects */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-5 rounded-xl shadow-xs card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl soft-card card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed</p>
-            <h3 className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1">{completedProjects}</h3>
-            <p className="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-              {totalProjects > 0 ? `${Math.round((completedProjects / totalProjects) * 100)}%` : '0%'}
-            </p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{completedProjects}</h3>
+            <span className="inline-block mt-0.5 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
+              {totalProjects > 0 ? `${Math.round((completedProjects / totalProjects) * 100)}% done` : '0%'}
+            </span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 self-end sm:self-auto">
-            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 self-end sm:self-auto border border-emerald-100 dark:border-emerald-900/40">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
 
         {/* In Progress */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-5 rounded-xl shadow-xs card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl soft-card card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">In Progress</p>
-            <h3 className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1">{inProgressProjects}</h3>
-            <p className="text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 font-medium mt-0.5">Active</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">In Progress</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{inProgressProjects}</h3>
+            <span className="inline-block mt-0.5 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-semibold rounded-full border border-blue-200/60 dark:border-blue-800/60">
+              Active sprints
+            </span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 self-end sm:self-auto">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 self-end sm:self-auto border border-blue-100 dark:border-blue-900/40">
+            <Clock className="w-5 h-5" />
           </div>
         </div>
 
         {/* Not Started */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-5 rounded-xl shadow-xs card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl soft-card card-hover flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Started</p>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-200 mt-0.5 sm:mt-1">{notStartedProjects}</h3>
-            <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">Planning</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Not Started</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-200 mt-1">{notStartedProjects}</h3>
+            <span className="inline-block mt-0.5 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-semibold rounded-full border border-slate-200 dark:border-slate-700">
+              Backlog queue
+            </span>
           </div>
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0 self-end sm:self-auto">
-            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0 self-end sm:self-auto border border-slate-200 dark:border-slate-700">
+            <AlertCircle className="w-5 h-5" />
           </div>
         </div>
       </div>
 
-      {/* Overall Progress Banner */}
-      <div className="bg-gradient-to-r from-[#0f172a] to-[#1e293b] p-4 sm:p-6 rounded-2xl text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 border border-slate-800 max-w-full">
+      {/* Overall Progress Banner with Soft Floating Container */}
+      <div className="bg-gradient-to-r from-[#0f172a] via-[#162033] to-[#1e293b] p-5 sm:p-7 rounded-2xl text-white soft-card flex flex-col md:flex-row md:items-center justify-between gap-5 border border-slate-800 max-w-full">
         <div>
-          <div className="flex items-center gap-2 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-            <TrendingUp className="w-4 h-4" />
-            <span>Overall Portfolio Completion</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-400/20 rounded-full text-blue-400 text-xs font-semibold tracking-wide">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>PORTFOLIO HEALTH</span>
           </div>
-          <h2 className="text-lg sm:text-xl font-bold mt-1 text-white">Enterprise Project Health</h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-lg">
-            Aggregated progress computed automatically across {totalProjects} active projects and milestone stages.
+          <h2 className="text-lg sm:text-xl font-bold mt-2 text-white tracking-tight">Enterprise Delivery Metrics</h2>
+          <p className="text-xs text-slate-300 mt-1 max-w-lg leading-relaxed">
+            Aggregated progress computed automatically across {totalProjects} projects and active milestone stages.
           </p>
         </div>
-        <div className="w-full md:w-72 bg-slate-800/80 p-3.5 sm:p-4 rounded-xl border border-slate-700">
-          <div className="flex justify-between items-center text-xs mb-2">
+        <div className="w-full md:w-80 bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 shadow-inner">
+          <div className="flex justify-between items-center text-xs mb-2.5">
             <span className="text-slate-300 font-medium">Average Completion</span>
             <span className="text-base sm:text-lg font-bold text-blue-400">{overallCompletionPercentage}%</span>
           </div>
-          <div className="w-full bg-slate-700 h-2.5 sm:h-3 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-700/80 h-3 rounded-full overflow-hidden">
             <div 
-              className="bg-blue-500 h-full rounded-full transition-all duration-500" 
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500 shadow-sm" 
               style={{ width: `${overallCompletionPercentage}%` }}
             />
           </div>
@@ -146,7 +150,7 @@ export const DashboardView = ({ onSelectProject, onOpenNewProject }) => {
       {/* Charts Section: Donut Chart & Bar Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 max-w-full">
         {/* Donut Chart: Status Distribution */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/90 dark:border-slate-800 soft-card">
           <div className="mb-4">
             <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Status Distribution</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">Breakdown of projects by lifecycle state</p>
@@ -171,7 +175,7 @@ export const DashboardView = ({ onSelectProject, onOpenNewProject }) => {
                   </Pie>
                   <Tooltip 
                     formatter={(val, name) => [`${val} projects`, name]}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', fontSize: '12px' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', fontSize: '12px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -199,13 +203,13 @@ export const DashboardView = ({ onSelectProject, onOpenNewProject }) => {
         </div>
 
         {/* Bar Chart: Project Progress */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/90 dark:border-slate-800 soft-card">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Project Progress Overview</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Milestone completion percentage per project</p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md">
+            <span className="text-xs font-semibold px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full border border-slate-200/80 dark:border-slate-700">
               Top Active
             </span>
           </div>
@@ -230,12 +234,12 @@ export const DashboardView = ({ onSelectProject, onOpenNewProject }) => {
                   <Tooltip 
                     formatter={(val) => [`${val}%`, 'Progress']}
                     labelFormatter={(name, payload) => payload?.[0]?.payload?.fullName || name}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', fontSize: '12px' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', fontSize: '12px' }}
                   />
                   <Bar 
                     dataKey="progress" 
                     fill="#3b82f6" 
-                    radius={[4, 4, 0, 0]} 
+                    radius={[6, 6, 0, 0]} 
                     maxBarSize={40}
                   />
                 </BarChart>
@@ -250,18 +254,18 @@ export const DashboardView = ({ onSelectProject, onOpenNewProject }) => {
       </div>
 
       {/* Projects Quick Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 soft-card overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-white">Projects Summary</h3>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Projects Summary</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">Live progress tracking and deadlines</p>
           </div>
           {onOpenNewProject && (
             <button
               onClick={onOpenNewProject}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors self-start sm:self-auto cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all self-start sm:self-auto cursor-pointer active:scale-95"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               <span>Create Project</span>
             </button>
           )}

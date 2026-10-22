@@ -4,61 +4,26 @@ import { useAuth } from './AuthContext'
 
 const ProjectsContext = createContext(null)
 
-const INITIAL_DEMO_PROJECTS = [
-  {
-    id: 'demo-p-1',
-    name: 'Website Redesign & Brand Revamp',
-    description: 'Modernizing corporate web portal and upgrading UI components to React and Tailwind CSS.',
-    status: 'In Progress',
-    start_date: '2026-03-01',
-    due_date: '2026-11-15',
-    progress: 60,
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    stages: [
-      { id: 's1', project_id: 'demo-p-1', name: 'Design System & Figma Mockups', description: 'Create tokens and component library', status: 'Completed', due_date: '2026-04-10', display_order: 1 },
-      { id: 's2', project_id: 'demo-p-1', name: 'Frontend Architecture & Routing', description: 'Setup Vite, Tailwind, and layout shells', status: 'Completed', due_date: '2026-05-20', display_order: 2 },
-      { id: 's3', project_id: 'demo-p-1', name: 'Dashboard & Analytics Integration', description: 'Build interactive Recharts and real-time updates', status: 'Completed', due_date: '2026-07-15', display_order: 3 },
-      { id: 's4', project_id: 'demo-p-1', name: 'Supabase Database Migration', description: 'Setup RLS rules and Postgres tables', status: 'In Progress', due_date: '2026-10-30', display_order: 4 },
-      { id: 's5', project_id: 'demo-p-1', name: 'End-to-End QA & Launch', description: 'User acceptance tests and production deployment', status: 'Pending', due_date: '2026-11-15', display_order: 5 }
-    ]
-  },
-  {
-    id: 'demo-p-2',
-    name: 'Mobile App API v2',
-    description: 'Developing high-throughput REST and GraphQL endpoints with JWT authentication.',
-    status: 'Completed',
-    start_date: '2026-01-10',
-    due_date: '2026-08-30',
-    progress: 100,
-    created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
-    stages: [
-      { id: 's6', project_id: 'demo-p-2', name: 'API Specification & Swagger', description: 'Document contracts and endpoints', status: 'Completed', due_date: '2026-02-15', display_order: 1 },
-      { id: 's7', project_id: 'demo-p-2', name: 'Core Microservices Dev', description: 'Implement authentication and data access layer', status: 'Completed', due_date: '2026-05-15', display_order: 2 },
-      { id: 's8', project_id: 'demo-p-2', name: 'Load Testing & Prod Rollout', description: 'Stress test 10k req/sec', status: 'Completed', due_date: '2026-08-30', display_order: 3 }
-    ]
-  },
-  {
-    id: 'demo-p-3',
-    name: 'Customer Portal Security Audit',
-    description: 'Penetration testing and ISO 27001 compliance verification for enterprise clients.',
-    status: 'Not Started',
-    start_date: '2026-11-01',
-    due_date: '2026-12-20',
-    progress: 0,
-    created_at: new Date().toISOString(),
-    stages: [
-      { id: 's9', project_id: 'demo-p-3', name: 'Scope Definition', description: 'Identify target IPs and service accounts', status: 'Not Started', due_date: '2026-11-05', display_order: 1 },
-      { id: 's10', project_id: 'demo-p-3', name: 'Automated Vulnerability Scan', description: 'Run SAST and DAST scanners', status: 'Not Started', due_date: '2026-11-18', display_order: 2 },
-      { id: 's11', project_id: 'demo-p-3', name: 'Remediation & Final Report', description: 'Patch findings and present executive audit summary', status: 'Not Started', due_date: '2026-12-20', display_order: 3 }
-    ]
-  }
-]
+const INITIAL_DEMO_PROJECTS = []
 
 export const ProjectsProvider = ({ children }) => {
   const { user } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Clear any legacy demo mock data from localStorage if present
+  useEffect(() => {
+    try {
+      const local = localStorage.getItem('app_projects_data')
+      if (local && local.includes('demo-p-1')) {
+        localStorage.removeItem('app_projects_data')
+      }
+      localStorage.removeItem('demo_auth_active')
+    } catch (e) {
+      // Ignore
+    }
+  }, [])
 
   // Compute progress for a project based on its stages
   const calculateProgressFromStages = (stages = []) => {
@@ -73,18 +38,19 @@ export const ProjectsProvider = ({ children }) => {
     setError(null)
 
     if (!isSupabaseConfigured || !supabase) {
-      // Use local storage demo store
       const local = localStorage.getItem('app_projects_data')
       if (local) {
         try {
-          setProjects(JSON.parse(local))
+          const parsed = JSON.parse(local)
+          // Filter out any leftover demo items
+          const realOnly = Array.isArray(parsed) ? parsed.filter(p => !p.id?.startsWith('demo-p-')) : []
+          setProjects(realOnly)
         } catch {
-          setProjects(INITIAL_DEMO_PROJECTS)
-          localStorage.setItem('app_projects_data', JSON.stringify(INITIAL_DEMO_PROJECTS))
+          setProjects([])
+          localStorage.removeItem('app_projects_data')
         }
       } else {
-        setProjects(INITIAL_DEMO_PROJECTS)
-        localStorage.setItem('app_projects_data', JSON.stringify(INITIAL_DEMO_PROJECTS))
+        setProjects([])
       }
       setLoading(false)
       return
