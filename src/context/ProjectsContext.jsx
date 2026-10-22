@@ -596,6 +596,64 @@ export const ProjectsProvider = ({ children }) => {
     }
   }
 
+  // 9. Insert Global Task Column across projects and cloud database
+  const insertGlobalTask = async (taskName, afterTask = '') => {
+    if (!taskName || !taskName.trim()) return
+    const cleanName = taskName.trim()
+
+    // 1. Optimistically update all projects in local state
+    setProjects(prev => prev.map(p => {
+      const currentStages = p.stages || []
+      // If project already has this stage, leave it alone
+      if (currentStages.some(s => s.name.trim().toLowerCase() === cleanName.toLowerCase())) {
+        return p
+      }
+
+      const newStage = {
+        id: 'stg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+        project_id: p.id,
+        name: cleanName,
+        status: 'Not Started',
+        description: 'Tracked in Project Master',
+        display_order: currentStages.length + 1
+      }
+
+      let updatedStages = [...currentStages]
+      if (afterTask) {
+        const afterIndex = updatedStages.findIndex(
+          s => s.name.trim().toLowerCase() === afterTask.trim().toLowerCase()
+        )
+        if (afterIndex !== -1) {
+          updatedStages.splice(afterIndex + 1, 0, newStage)
+        } else {
+          updatedStages.push(newStage)
+        }
+      } else {
+        updatedStages.push(newStage)
+      }
+
+      // Re-index display orders
+      updatedStages = updatedStages.map((s, idx) => ({ ...s, display_order: idx + 1 }))
+      return { ...p, stages: updatedStages }
+    }))
+
+    // 2. Insert into Supabase if configured
+    if (isSupabaseConfigured && supabase && projects.length > 0) {
+      try {
+        const stageRows = projects.map((p, idx) => ({
+          project_id: p.id,
+          name: cleanName,
+          status: 'Not Started',
+          description: 'Tracked in Project Master',
+          display_order: (p.stages?.length || 0) + 1
+        }))
+        await supabase.from('project_stages').insert(stageRows)
+      } catch (err) {
+        console.error('Error inserting global task into Supabase:', err)
+      }
+    }
+  }
+
   // 10. Rename Global Task Column across projects and cloud database
   const renameGlobalTask = async (oldName, newName) => {
     if (!oldName || !newName || !newName.trim()) return
