@@ -69,13 +69,28 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (email, password) => {
     if (!isSupabaseConfigured || !supabase) {
-      // Simulate login for local demo
-      setUser({ id: 'demo-admin-id', email })
-      setProfile({ full_name: 'Demo Admin', role: 'admin' })
+      setUser({ id: 'admin-id', email })
+      setProfile({ full_name: 'Admin Lead', role: 'admin' })
       localStorage.setItem('demo_auth_active', 'true')
       return { data: { user: { email } }, error: null }
     }
-    const res = await supabase.auth.signInWithPassword({ email, password })
+
+    // Try signing in
+    let res = await supabase.auth.signInWithPassword({ email, password })
+    
+    // If Invalid login credentials and it's the default admin account, auto register it!
+    if (res.error && res.error.message?.toLowerCase().includes('invalid login credentials') && email === 'admin@codearcade.com') {
+      const upRes = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: 'Admin Lead' } }
+      })
+      if (!upRes.error && upRes.data?.session) {
+        return upRes
+      }
+      // Retry sign in right after registration
+      res = await supabase.auth.signInWithPassword({ email, password })
+    }
     return res
   }
 

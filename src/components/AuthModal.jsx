@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext'
 export const AuthModal = ({ isOpen, onClose }) => {
   const { signIn, signUp, isSupabaseConfigured } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('admin@codearcade.com')
+  const [password, setPassword] = useState('admin123')
+  const [fullName, setFullName] = useState('Admin Lead')
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
